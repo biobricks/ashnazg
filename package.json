@@ -1,0 +1,25 @@
+{
+  "name": "ashnazg",
+  "version": "0.0.1",
+  "description": "Simple front-end state management with JSX bindings",
+  "homepage": "http://github.com/biobricks/ashnazg",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/biobricks/ashnazg.git"
+  },
+  "dependencies": {
+    "state-diff": "0.0.2"
+  },
+  "author": {
+    "name": "Marc Juul",
+    "email": "npm@juul.io"
+  },
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/biobricks/ashnazg/issues"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/tape tests/*.js"
+  },
+  "devDependencies": {}
+}
