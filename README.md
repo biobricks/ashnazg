@@ -58,6 +58,20 @@ By default an instance of a component is bound to the global app state using its
 <Counter state="[]" /> // bind to app.state.counter[1]
 ```
 
+# Example
+
+You can try the example in the `example/` directory like so:
+
+```
+cd example/
+npm install
+npm run build
+npm start
+firefox http://localhost:8000/
+```
+
+This example uses preact.
+
 # Notes on performance and compatibility
 
 On browsers without support for the `Proxy` object ashnazg will fall back to diffing the previous and new states to see what the changes were and update the relevant components _unless_ you either update the component state from within the component or use the two-argument version of `app.changeState` or `app.setState` in a way that only affects one component at a time. 
@@ -94,9 +108,8 @@ With ashnazg you have to call `.commitState` after directly modifying the state 
 
 In ashnazg changes to state using the component-local `.changeState` or `.setState` always re-renders. If a single component is bound to the global state at 'path.to.property' then if global state is modified using `.changeState('path.to.property', <value>)` or any paths nested under 'path.to.property' (e.g. 'path.to.property.foo') then ashnazg will always re-render that component. If the global state is modified in a way that may influence multiple components then on browsers that support the Proxy object ashnazg figures out which components are affected using that method, but on older browsers ashnazg falls back to diffing the current state and the changed state in order to detect the changes.
 
-ashnazg is smaller than MobX (ToDo by how much?).
+Other differences:
 
-ashnazg doesn't support ES.next features like decorators.
-
-ashnazg is written in ES5 instead of TypeScript.
-
+* ashnazg is written in ES6 instead of TypeScript
+* ashnazg is less than a 10th the size of MobX
+* ashnazg doesn't support ES.next features like decorators
