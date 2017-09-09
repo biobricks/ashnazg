@@ -1,5 +1,5 @@
 
-Work in progress. Come back later.
+Work in progress. Mostly working, but come back later.
 
 ashnazg is a tiny front-end state management system with JSX bindings for use with e.g. Preact or React. 
 
@@ -50,6 +50,7 @@ You can now change `app.state.counter.number` and the state of the Counter compo
 By default an instance of a component is bound to the global app state using its own name (in lower case). To manually specify where a component instance is bound to the global app state you can use the `state=` property:
 
 ```
+<Counter /> // bind to app.state.myCounter
 <Counter state="myCounter" /> // bind to app.state.myCounter
 <Counter state="foo[]" /> // bind to app.state.foo[0]
 <Counter state="foo[]" /> // bind to app.state.foo[1]
@@ -71,6 +72,16 @@ firefox http://localhost:8000/
 ```
 
 This example uses preact.
+
+# Options
+
+By default ashnazg will keep global state at `window.app.state` (reachable in the browser simply as the global variable `app.state`). If you want to keep the `.state` at a different location you can explicitly specify:
+
+```
+ashnazg(cookie, 'cat', PreactComponent) # keep state at cookie.cat.state
+ashnazg('foo', PreactComponent) # window.foo.state
+ashnazg(PreactComponent) # keep state at window.app.state
+```
 
 # Notes on performance and compatibility
 
@@ -113,3 +124,15 @@ Other differences:
 * ashnazg is written in ES6 instead of TypeScript
 * ashnazg is less than a 10th the size of MobX
 * ashnazg doesn't support ES.next features like decorators
+
+# ToDo
+
+* implement `.changeState`
+* ensure that `.commitState` works
+* unit tests
+
+# License and copyright
+
+License: AGPLv3
+
+Copyright 2017 BioBricks Foundation

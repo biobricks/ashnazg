@@ -56,8 +56,19 @@ function setProp(obj, path, value) {
 
 
 export default function(windowObj, appVarPath, ClassToExtend) {
+  if(!appVarPath) {
+    ClassToExtend = windowObj;
+    windowObj = window;
+    appVarPath = 'app';
+  }
 
-  if(!windowObj || !appVarPath || !ClassToExtend) throw new Error("Missing or invalid arguments");
+  if(!ClassToExtend) {
+    ClassToExtend = appVarPath;
+    appVarPath = windowObj;
+    windowObj = window;
+  }
+
+  if(!ClassToExtend) throw new Error("Missing or invalid arguments");
 
   var app = getProp(windowObj, appVarPath);
   if(!app) {

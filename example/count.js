@@ -2,7 +2,7 @@
 import {h, Component as PreactComponent} from 'preact'
 import ashnazg from './ashnazg.js'
 
-const Component = ashnazg(window, 'app', PreactComponent)
+const Component = ashnazg(PreactComponent)
 
 export default class Count extends Component {
 
