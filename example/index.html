@@ -3,9 +3,14 @@
   <head>
     <title>ashnazg preact example</title>
   </head>
-  <body>
+  <body style="color:#DDD; background-color:black; font-family:sans-serif">
     <h3>ashnazg preact example</h3>
-    <div id="container"></div>
+    <p>Change individual component state by clicking buttons and watch it propagate to the global app state object.<br/>Edit the text area and watch the individual components update from the global app state.</p>
+    <div id="container" style="float:left"></div>
+    <div id="right" style="float:left; margin-left:100px; font-family:monospace">
+      <textarea id="app-state" rows="28" cols="60"></textarea>
+      <button id="save-button" onclick="saveState()">save</button>
+    </div>
     <script src="bundle.js"></script>
   </body>
 </html>

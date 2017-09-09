@@ -1,14 +1,17 @@
 
-import {h, Component} from 'preact'
+import {h, Component as PreactComponent} from 'preact'
+import ashnazg from './ashnazg.js'
+
+const Component = ashnazg(window, 'app', PreactComponent)
 
 export default class Count extends Component {
 
   constructor(props) {
     super(props);
 
-    this.state = {
+    this.setState({
       number: 1000
-    };
+    });
   }
   
   increment() {
@@ -18,6 +21,7 @@ export default class Count extends Component {
   }
 
 	render() {
+    document.getElementById('app-state').value = JSON.stringify(app.state, null, 2)
 		return <div>
       <span> Count: { this.state.number }</span>
         <div>
