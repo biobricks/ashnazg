@@ -25,7 +25,6 @@ window.saveState = function() {
   var newState;
   try {
     newState = JSON.parse(document.getElementById('app-state').value);
-    console.log("DD", JSON.stringify(newState));
     app.setState(newState);
   } catch(e) {
     console.error(e);
