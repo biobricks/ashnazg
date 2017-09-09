@@ -28,7 +28,7 @@ function getProp(obj, path) {
   if(path.length > 1) {
     if(!obj[path[0]]) return undefined;
 
-    return resolvePropPath(obj[path[0]], path.slice(1, path.length));
+    return getProp(obj[path[0]], path.slice(1, path.length));
   }
 
   if(path.length === 1) {
@@ -46,8 +46,7 @@ function setProp(obj, path, value) {
 
   if(path.length > 1) {
     if(!obj[path[0]]) obj[path[0]] = {}
-
-    resolvePropPath(obj[path[0]], path.slice(1, path.length), value)
+    setProp(obj[path[0]], path.slice(1, path.length), value)
   }
 
   if(path.length === 1) {
@@ -186,22 +185,23 @@ export default function(windowObj, appVarPath, ClassToExtend) {
         if(this.props.state === "[]") {
           this.props.state = this.constructor.name.toLowerCase();
         } else {
-          this.props.state = this.props.state.slice(0, this.props.state.length - 2)
+          this.props.state = this.props.state.slice(0, this.props.state.length - 2).toLowerCase();
         }
         
-        if(!app.state[this.props.state]) {
-          app.state[this.props.state] = [this.state];
+        if(!getProp(app.state, this.props.state)) {
+          setProp(app.state, this.props.state, [this.state])
           this.stateIndex = 0;
         } else {
-          if(!(app.state[this.props.state] instanceof Array)) {
+          if(!(getProp(app.state, this.props.state) instanceof Array)) {
             throw new Error("Invalid state property. Trying to append a component where non-array component is already mapped: app."+this.props.state);
           }
-          app.state[this.props.state].push(this.state);
+          
+          getProp(app.state, this.props.state).push(this.state);
           this.stateIndex = app.state[this.props.state].length - 1;
         }
 
       } else {
-        app.state[this.props.state] = this.state
+        setProp(app.state, this.props.state, this.state);
       }
 
       var componentKey = this.props.state;
@@ -214,13 +214,13 @@ export default function(windowObj, appVarPath, ClassToExtend) {
       const realSetState = this.setState.bind(this);
       this.setState = function(newState) {
         
-        
+
         if(this.hasOwnProperty('stateIndex')) {
-          app.state[this.props.state][this.stateIndex] = this.state
+          setProp(app.state, this.props.state + '.' + this.stateIndex, this.state);
         } else {
-          app.state[this.props.state] = this.state
+          setProp(app.state, this.props.state, this.state);
         }
-        
+
         realSetState(newState);
       };
     }
