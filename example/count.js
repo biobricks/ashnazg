@@ -1,6 +1,6 @@
 
 import {h, Component as PreactComponent} from 'preact'
-import ashnazg from './ashnazg.js'
+import ashnazg from './ashnazg'
 
 const Component = ashnazg(PreactComponent)
 

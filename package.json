@@ -3,6 +3,7 @@
   "version": "0.0.4",
   "description": "Simple front-end state management with JSX bindings",
   "homepage": "http://github.com/biobricks/ashnazg",
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/biobricks/ashnazg.git"
@@ -20,7 +21,12 @@
     "url": "https://github.com/biobricks/ashnazg/issues"
   },
   "scripts": {
-    "test": "node_modules/.bin/tape tests/*.js"
+    "test": "node_modules/.bin/tape tests/*.js",
+    "build": "babel --presets babel-preset-es2015 -o dist/index.js index.js",
+    "prepublish": "npm run build"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1"
+  }
 }
