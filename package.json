@@ -1,6 +1,6 @@
 {
   "name": "ashnazg",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Simple front-end state management with JSX bindings",
   "homepage": "http://github.com/biobricks/ashnazg",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "deepmerge": "^1.5.1",
-    "state-diff": "0.0.2"
+    "state-diff": "0.0.3"
   },
   "author": {
     "name": "Marc Juul",
