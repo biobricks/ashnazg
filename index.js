@@ -1,5 +1,6 @@
 
 import diff from 'state-diff'
+import merge from 'deepmerge'
 
 // resolve a path like ['foo', 'bar', 'baz']
 // to return the value of obj.foo.bar.baz
@@ -23,6 +24,7 @@ function resolvePropPath(obj, path) {
 // to return the value of obj.foo.bar.baz
 // or undefined if that path does not exist
 function getProp(obj, path) {
+  if(!path) return obj;
   if(typeof path === 'string') path = path.split('.');
 
   if(path.length > 1) {
@@ -81,13 +83,16 @@ export default function(windowObj, appVarPath, ClassToExtend) {
   app.state = {}
   app._stateComponents = {}
   
+
   app.setState = function(path, state, noDiff) {
     if(!state) {
       state = path
       path = undefined
     }
 
-    app.commitState(path, state, noDiff)
+    var appState = getProp(app.state, path);
+
+    commitState(path, appState, state, noDiff)
   }
 
   app.changeState = function(path, state, noDiff) {
@@ -96,42 +101,41 @@ export default function(windowObj, appVarPath, ClassToExtend) {
       path = undefined
     }
    
-    // TODO
-    
+    var appState = getProp(app.state, path);
+    state = merge(appState, state, {clone: true});
+    console.log(JSON.stringify(state, 2))
+
+    commitState(path, appState, state, noDiff);
   }
 
-  app.commitState = function(path, state, noDiff) {
+  function commitState(path, appState, state, noDiff) {
     if(path) {
       const affected = deepestSingleAffected(path)
       if(affected) {
         if(noDiff) {
           affected.component.setState(state);
         } else {
-          diffUpdate(affected.path, state)
+          diffUpdate(affected.path, appState, state)
         }
+        setProp(app.state, path, state);
         return;
       }
-      setProp(app.state, path, state);
     }
-    diffUpdate(path, state)
+    diffUpdate(path, appState, state)
     
     if(!path) {
       app.state = state;
     }
   }
 
-  function diffUpdate(path, state) {
+
+  function diffUpdate(path, appState, state) {
     if(!state) {
       state = path
       path = []
     }
-    var appState;
-    if(!path) {
-      path = ''
-      appState = app.state;
-    } else {
-      appState = getProp(app.state, path);
-    }
+
+    if(!path) path = '';
 
     var affected;
     var updated = {};

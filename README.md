@@ -1,9 +1,9 @@
 
-Work in progress. Mostly working, but come back later.
-
 ashnazg is a tiny front-end state management system with JSX bindings for use with e.g. Preact or React. 
 
 ashnazg makes it easy to keep a global app state using a simple uni-directional data flow.
+
+This module is not ready for production use. Needs more testing.
 
 # Usage
 
@@ -45,12 +45,44 @@ export default class Counter extends Component {
 render(<Counter />, document.getElementById('app'));
 ```
 
-You can now change `app.state.counter.number` and the state of the Counter component instance will change. Likewise changes to `this.state` within the component will update `app.state.counter`. Note that changes to state must be done using the normal `this.setState(...)` within the component. Outside of the component you can either call `app.commitState` after directly modifying the state (but don't use this with asynchronous code) or use `app.changeState` or `app.setState`. 
+You can now change `app.state.counter.number` and the state of the Counter component instance will change. Likewise changes to `this.state` within the component will update `app.state.counter`. Note that changes to state must be done using the normal `this.setState(...)` within the component. Outside of the component you can either call `app.setState` normally or you can call `app.setState` with a path to only change a part of the state like so:
+
+```
+app.setState('foo.bar', {baz: 42})
+```
+
+or you can call `app.changeState` to only change the specified properties like so:
+
+```
+app.changeState({
+  foo: {
+    bar: {
+      baz: 42}
+    }
+  }
+)
+```
+
+`app.changeState` also takes an optional path argument, same as `app.setState`.
+
+Using app.changeState to only change a particular element in an array is a bit tricky. Here's how:
+
+```
+var myChange = {
+  myArray: []
+};
+
+myChange.myArray[3] = {
+  value: 42
+}
+
+app.changeState(myChange)
+```
 
 By default an instance of a component is bound to the global app state using its own name (in lower case). To manually specify where a component instance is bound to the global app state you can use the `state=` property:
 
 ```
-<Counter /> // bind to app.state.myCounter
+<Counter state /> // bind to app.state.myCounter
 <Counter state="myCounter" /> // bind to app.state.myCounter
 <Counter state="foo[]" /> // bind to app.state.foo[0]
 <Counter state="foo[]" /> // bind to app.state.foo[1]
@@ -78,10 +110,12 @@ This example uses preact.
 By default ashnazg will keep global state at `window.app.state` (reachable in the browser simply as the global variable `app.state`). If you want to keep the `.state` at a different location you can explicitly specify:
 
 ```
-ashnazg(cookie, 'cat', PreactComponent) # keep state at cookie.cat.state
-ashnazg('foo', PreactComponent) # window.foo.state
+ashnazg(cookie, 'cat.lol', PreactComponent) # keep state at cookie.cat.lol.state
+ashnazg('foo.bar', PreactComponent) # window.foo.bar.state
 ashnazg(PreactComponent) # keep state at window.app.state
 ```
+
+Note that for the above examples the specified paths (`cookie.cat.lol` and `window.foo.bar`) must already exist.
 
 # Notes on performance and compatibility
 
@@ -127,8 +161,7 @@ Other differences:
 
 # ToDo
 
-* implement `.changeState`
-* ensure that `.commitState` works
+* add support for reducers
 * unit tests
 
 # License and copyright

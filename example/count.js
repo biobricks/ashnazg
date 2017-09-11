@@ -22,7 +22,7 @@ export default class Count extends Component {
 
 	render() {
     document.getElementById('app-state').value = JSON.stringify(app.state, null, 2)
-		return <div>
+    return <div>
       <span> Count: { this.state.number }</span>
         <div>
           <button onclick={this.increment.bind(this)}>Increment</button>

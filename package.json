@@ -8,6 +8,7 @@
     "url": "git://github.com/biobricks/ashnazg.git"
   },
   "dependencies": {
+    "deepmerge": "^1.5.1",
     "state-diff": "0.0.2"
   },
   "author": {

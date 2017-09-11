@@ -5,11 +5,29 @@
   </head>
   <body style="color:#DDD; background-color:black; font-family:sans-serif">
     <h3>ashnazg preact example</h3>
-    <p>Change individual component state by clicking buttons and watch it propagate to the global app state object.<br/>Edit the text area, hit save and watch the individual components update from the global app state.</p>
+    <p>Change individual component state by clicking buttons and watch it propagate to the global app state object.<br/>The middle text box shows the current global app state. Edit the state, hit save and watch the individual components update from the global app state.<br/>The text box on the right allows changes to the state without specifying the entire global state.</br> </p>
     <div id="container" style="float:left"></div>
     <div id="right" style="float:left; margin-left:100px; font-family:monospace">
-      <textarea id="app-state" rows="28" cols="60"></textarea>
+      <textarea id="app-state" rows="28" cols="30"></textarea>
       <button id="save-button" onclick="saveState()">save</button>
+    </div>
+
+    <div id="right" style="float:left; margin-left:100px; font-family:monospace">
+      <textarea id="app-state-change" rows="28" cols="30">
+{
+  "bob": {
+    "myclock": {
+      "number": 99999
+    }
+  },
+  "count": [
+    {
+      "number": 1337
+    }
+  ]
+}
+      </textarea>
+      <button id="change-button" onclick="changeState()">change</button>
     </div>
     <script src="bundle.js"></script>
   </body>
