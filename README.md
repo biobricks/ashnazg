@@ -3,7 +3,7 @@ ashnazg is a tiny front-end state management system with JSX bindings for use wi
 
 ashnazg makes it easy to keep a global app state using a simple uni-directional data flow.
 
-This module is not ready for production use. Needs more testing.
+This module is not ready for production use. Needs more testing. Also, the `Proxy` functionality as described below is not yet ready.
 
 # Usage
 
