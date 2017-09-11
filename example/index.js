@@ -1,7 +1,10 @@
 
 
-import {h, render, createElement} from 'preact'
-import Count from './count.js'
+import {h, render, createElement, Component as PreactComponent} from 'preact'
+import ashnazg from './ashnazg'
+
+const Component = ashnazg(PreactComponent)
+var Count = require('./count.js')(Component)
 
 
 function renderAll() {
