@@ -79,6 +79,26 @@ myChange.myArray[3] = {
 app.changeState(myChange)
 ```
 
+This is annoying, so you can also use `app.commitState` after directly manipulatingthe app state like this:
+
+```
+app.state.foo.bar.baz++
+app.commitState()
+```
+
+Be aware that for browsers that don't support the `Proxy` object, ashnazg has to keep an extra copy of the entire app state for `app.commitState` to work. If your app's performance is suffering then you can stop ashnazg from keeping a copy by setting `opts.simpleCommit` to `false`, but then you will have to run `app.beginCommit()` before changing the global app state like so:
+
+```
+app.beginCommit()
+app.state.foo.bar.baz++
+app.commitState()
+```
+
+Or of course you can simply decide not to use `app.commitState`.
+
+Like the other state-modyfing functions, `app.commitState` takes an optional `path` argument.
+
+
 By default an instance of a component is bound to the global app state using its own name (in lower case). To manually specify where a component instance is bound to the global app state you can use the `state=` property:
 
 ```
@@ -107,12 +127,26 @@ This example uses preact.
 
 # Options
 
-By default ashnazg will keep global state at `window.app.state` (reachable in the browser simply as the global variable `app.state`). If you want to keep the `.state` at a different location you can explicitly specify:
+```
+ashnazg(PreactComponent, {
+  object: window, // where to bind .app and .state objects
+  appPath: 'app', // path to .app object (default: window.app)
+  statePath: 'app.state', // path to .state object (default: window.app.state)
+  simpleCommmit: true // keep a copy of app state so you won't need .beginCommit
+}) 
+```
+
+By default ashnazg will keep global state at `window.app.state` (reachable in the browser simply as the global variable `app.state`) and bind `.setState()` etc. to `window.app`. If you want to place `.app` and .state` elsewhere you can set `opts.appPath` and `opts.statePath`. If you want to change the root object from `window` then specify the object (not the path) as `opts.object`, e.g:
 
 ```
-ashnazg(cookie, 'cat.lol', PreactComponent) # keep state at cookie.cat.lol.state
-ashnazg('foo.bar', PreactComponent) # window.foo.bar.state
-ashnazg(PreactComponent) # keep state at window.app.state
+# keep .app at foo.baz.baz
+# and .state at foo.cookie.cat
+
+ashnazg(PreactComponent, {
+  object: cookie,
+  appPath: 'bar.baz',
+  statePath: 'cookie.cat'
+}) 
 ```
 
 Note that for the above examples the specified paths (`cookie.cat.lol` and `window.foo.bar`) must already exist.

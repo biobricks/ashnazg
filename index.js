@@ -2,6 +2,11 @@
 import diff from 'state-diff'
 import merge from 'deepmerge'
 
+// deep clone an object
+function clone(o) {
+  return merge.all([o, {}], {clone: true});
+}
+
 // resolve a path like ['foo', 'bar', 'baz']
 // to return the value of obj.foo.bar.baz
 // or undefined if that path does not exist
@@ -57,30 +62,35 @@ function setProp(obj, path, value) {
 }
 
 
-export default function(windowObj, appVarPath, ClassToExtend) {
-  if(!appVarPath) {
-    ClassToExtend = windowObj;
-    windowObj = window;
-    appVarPath = 'app';
-  }
-
-  if(!ClassToExtend) {
-    ClassToExtend = appVarPath;
-    appVarPath = windowObj;
-    windowObj = window;
-  }
+export default function(ClassToExtend, opts) {
+  opts = opts || {};
+  opts.object = opts.object || window;
+  opts.appPath = opts.path || 'app';
+  opts.statePath = opts.statePath || 'app.state';
+  opts.simpleCommit = opts.simpleCommit || true;
+  opts.backwardCompatible = opts.backwardCompatible || true; // ToDo
+  opts.hasProxy = false; // ToDo does this browser support the Proxy object?
 
   if(!ClassToExtend) throw new Error("Missing or invalid arguments");
 
-  var app = getProp(windowObj, appVarPath);
+  var stateCopy; // where we keep a copy of the state if necessary
+
+  var app = getProp(opts.object, opts.appPath);
   if(!app) {
     app = {};
-    setProp(windowObj, appVarPath, app);
+    setProp(opts.object, opts.appPath, app);
   }
 
-  if(app.state) throw new Error(".state already exists. ashnazg won't overwrite!")
+  var stateObj = getProp(opts.object, opts.statePath);
+  if(stateObj) {
+    throw new Error(".state already exists. ashnazg won't overwrite!")
+  }
 
-  app.state = {}
+  stateObj = {};
+  setProp(opts.object, opts.statePath, stateObj);
+
+  autoCopy();
+  
   app._stateComponents = {}
   
 
@@ -90,25 +100,52 @@ export default function(windowObj, appVarPath, ClassToExtend) {
       path = undefined
     }
 
-    var appState = getProp(app.state, path);
+    var appState = getProp(stateObj, path);
 
-    commitState(path, appState, state, noDiff)
+    saveState(path, appState, state, noDiff);
+    autoCopy();
   }
-
+    
   app.changeState = function(path, state, noDiff) {
     if(!state) {
       state = path
       path = undefined
     }
    
-    var appState = getProp(app.state, path);
+    var appState = getProp(stateObj, path);
     state = merge(appState, state, {clone: true});
-    console.log(JSON.stringify(state, 2))
 
-    commitState(path, appState, state, noDiff);
+    saveState(path, appState, state, noDiff);
+    autoCopy();
   }
 
-  function commitState(path, appState, state, noDiff) {
+  app.beginState = function() {
+    if(opts.hasProxy || opts.simpleCommit) return;
+
+    stateCopy = clone(stateObj);
+  };
+  
+  app.commitState = function(path, noDiff) {
+    if(!opts.simpleCommit && !stateCopy)
+      throw new Error("Called .commitState before calling .preCommitState when opts.simpleCommit is false. Go read the API");
+
+    var appState = getProp(stateCopy, path);
+    saveState(path, appState, stateObj, noDiff);
+
+    if(opts.simpleCommit) {
+      autoCopy();
+    } else {
+      stateCopy = null;
+    }
+  };
+  
+  // keep a copy of the state if necessary
+  function autoCopy() {
+    if(opts.hasProxy || !opts.simpleCommit) return
+    stateCopy = clone(stateObj);
+  }
+
+  function saveState(path, appState, state, noDiff) {
     if(path) {
       const affected = deepestSingleAffected(path)
       if(affected) {
@@ -117,14 +154,14 @@ export default function(windowObj, appVarPath, ClassToExtend) {
         } else {
           diffUpdate(affected.path, appState, state)
         }
-        setProp(app.state, path, state);
+        setProp(stateObj, path, state);
         return;
       }
     }
     diffUpdate(path, appState, state)
     
     if(!path) {
-      app.state = state;
+      setProp(app, opts.statePath, state);
     }
   }
 
@@ -203,20 +240,20 @@ export default function(windowObj, appVarPath, ClassToExtend) {
           this.props.state = this.props.state.slice(0, this.props.state.length - 2).toLowerCase();
         }
         
-        if(!getProp(app.state, this.props.state)) {
-          setProp(app.state, this.props.state, [this.state])
+        if(!getProp(stateObj, this.props.state)) {
+          setProp(stateObj, this.props.state, [this.state])
           this.stateIndex = 0;
         } else {
-          if(!(getProp(app.state, this.props.state) instanceof Array)) {
+          if(!(getProp(stateObj, this.props.state) instanceof Array)) {
             throw new Error("Invalid state property. Trying to append a component where non-array component is already mapped: app."+this.props.state);
           }
           
-          getProp(app.state, this.props.state).push(this.state);
-          this.stateIndex = app.state[this.props.state].length - 1;
+          getProp(stateObj, this.props.state).push(this.state);
+          this.stateIndex = stateObj[this.props.state].length - 1;
         }
 
       } else {
-        setProp(app.state, this.props.state, this.state);
+        setProp(stateObj, this.props.state, this.state);
       }
 
       var componentKey = this.props.state;
@@ -231,13 +268,16 @@ export default function(windowObj, appVarPath, ClassToExtend) {
         
 
         if(this.hasOwnProperty('stateIndex')) {
-          setProp(app.state, this.props.state + '.' + this.stateIndex, this.state);
+          setProp(stateObj, this.props.state + '.' + this.stateIndex, this.state);
         } else {
-          setProp(app.state, this.props.state, this.state);
+          setProp(stateObj, this.props.state, this.state);
         }
+
+        autoCopy();
 
         realSetState(newState);
       };
+      autoCopy();
     }
   }
 }
