@@ -151,6 +151,33 @@ ashnazg(PreactComponent, {
 
 Note that for the above examples the specified paths (`cookie.cat.lol` and `window.foo.bar`) must already exist.
 
+# Global state
+
+Your app may have some state such as login state that affects many components at once. Global state that triggers a re-render of all components can be implemented by creating a global wrapper component like so:
+
+```
+class Global extends Component {
+  render() {
+    return <div>
+      {this.props.children}
+    </div>
+	}
+}
+```
+
+then wrapping all other components with the Global component and mapping it to the state:
+
+```
+<Global state="global">
+  <Foo state="foo" />
+  <Bar state="bar" />
+</Global/>
+```
+
+`Foo` will still be mapped to `app.state.foo` and `global` will map to `app.state.global`. Changing `app.state.global will cause a re-render of all components nested under the `Global` component. The login state can then be written to e.g. `app.state.global.login` and can be safely accessed from the entire app.
+
+Note that re-rendering all components is not as bad as it since re-rendering is still happening using vDom.
+
 # Notes on performance and compatibility
 
 On browsers without support for the `Proxy` object ashnazg will fall back to diffing the previous and new states to see what the changes were and update the relevant components _unless_ you either update the component state from within the component or use the two-argument version of `app.changeState` or `app.setState` in a way that only affects one component at a time. 
