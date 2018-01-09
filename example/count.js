@@ -11,10 +11,14 @@ module.exports = function(Component) {
       this.setState({
         number: 1000
       });
+
+      this.listen('number', function(newState) {
+        console.log("My number changed to:", newState);
+      });
     }
     
     increment() {
-      this.setState({
+      this.changeState({
         number: this.state.number + 1
       });
     }

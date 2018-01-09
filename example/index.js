@@ -3,9 +3,8 @@
 import {h, render, createElement, Component as PreactComponent} from 'preact'
 import ashnazg from './ashnazg'
 
-const Component = ashnazg(PreactComponent)
+const Component = ashnazg.extend(PreactComponent)
 var Count = require('./count.js')(Component)
-
 
 function renderAll() {
   var container = document.getElementById('container');
@@ -18,8 +17,11 @@ function renderAll() {
   render(<Count state="[]" />, container);
   render(<Count state="[]" />, container);
   render(<Count state="[]" />, container);
-
 }
+
+ashnazg.listen('bob.myclock', function(newState) {
+  console.log("LISTENER TRIGGERED", JSON.stringify(newState, null, 2));
+});
 
 window.saveState = function() {
   var btn = document.getElementById('save-button');

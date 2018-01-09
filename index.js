@@ -2,9 +2,21 @@
 import diff from 'state-diff'
 import merge from 'deepmerge'
 
+/*
+  TODO: listeners don't change on component's own changeState
+        see "TODO doesn't trigger" in index.js
+        and "TODO not triggering" in index.js
+*/
+
+
+
 // deep clone an object
 function clone(o) {
   return merge.all([o, {}], {clone: true});
+}
+
+function genID() {
+  return (Math.random().toString(36)+'00000000000000000').slice(2, 16+2)
 }
 
 // resolve a path like ['foo', 'bar', 'baz']
@@ -62,7 +74,7 @@ function setProp(obj, path, value) {
 }
 
 
-export default function(ClassToExtend, opts) {
+function extend(ClassToExtend, opts) {
   opts = opts || {};
   opts.object = opts.object || window;
   opts.appPath = opts.path || 'app';
@@ -150,6 +162,8 @@ export default function(ClassToExtend, opts) {
       const affected = deepestSingleAffected(path)
       if(affected) {
         if(noDiff) {
+          // TODO doesn't trigger!
+          console.log("TODO should trigger");
           affected.component.setState(state);
         } else {
           diffUpdate(affected.path, appState, state)
@@ -174,15 +188,26 @@ export default function(ClassToExtend, opts) {
 
     if(!path) path = '';
 
-    var affected;
+    var affected, listeners;
     var updated = {};
-
+    var triggeredListeners = {};
+    var i;
     diff(appState, state, function(diffPath) {
 
       if(path) {
         diffPath = path + '.' + diffPath; // convert to absolute path
       }
       diffPath = diffPath.join('.');
+      listeners = findListeners(diffPath);
+      if(listeners.length) {
+        for(i=0; i < listeners.length; i++) {
+          if(triggeredListeners[listeners[i].id]) {
+            continue;
+          }
+          listeners[i].listener(getProp(state, listeners[i].path));
+          triggeredListeners[listeners[i].id] = true;
+        }
+      }
 
       affected = deepestSingleAffected(diffPath);
 
@@ -196,6 +221,24 @@ export default function(ClassToExtend, opts) {
         affected.component.setState(getProp(state, affected.path));
       }
     });
+  }
+
+  function findListeners(path) {
+    var key;
+    var hits = [];
+    for(key in listeners) {
+      if(key.length > path.length) continue;
+      if(path.indexOf(key) === 0 && 
+         (key.length === path.length ||
+          path[key.length] === '.')) {
+        hits.push({
+          listener: listeners[key].callback,
+          id: listeners[key].id,
+          path: key
+        });
+      }
+    }
+    return hits;
   }
 
   // Find the deepest single affected component.
@@ -220,7 +263,7 @@ export default function(ClassToExtend, opts) {
   }
 
 
-  return class Component extends ClassToExtend {
+  class ExtendedClass extends ClassToExtend {
 
     constructor(props) {
       super(props)
@@ -260,12 +303,15 @@ export default function(ClassToExtend, opts) {
       if(this.hasOwnProperty('stateIndex')) {
         componentKey += '.'+this.stateIndex;
       }
+      
+      this.statePath = componentKey;
 
       app._stateComponents[componentKey] = this;
       
       const realSetState = this.setState.bind(this);
       this.setState = function(newState) {
-        
+        // TODO not triggering
+        console.log("SHOULD TRIGGER");
 
         if(this.hasOwnProperty('stateIndex')) {
           setProp(stateObj, this.props.state + '.' + this.stateIndex, this.state);
@@ -279,5 +325,41 @@ export default function(ClassToExtend, opts) {
       };
       autoCopy();
     }
+
+    changeState(stateChange) {
+      var newState = merge(this.state, stateChange, {clone: true});
+      this.setState(newState);
+    }
+
+    listen(path, callback) {
+      if(!this.statePath) return;
+
+      if(typeof path === 'function') {
+        callback = path;
+        path = this.statePath;
+      } else {
+        path = this.statePath + '.' + path;
+      }
+      return gListen(path, callback);
+    }
+  }
+
+  return ExtendedClass;
+}
+
+
+var listeners = {};
+
+function gListen(path, callback) {
+  listeners[path] = {
+    callback,
+    id: genID()
   }
 }
+
+export default {
+  extend,
+  listen: gListen
+}
+
+

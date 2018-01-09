@@ -13,7 +13,7 @@ Using preact and ES6:
 import ashnazg from 'ashnazg'
 import {Component as PreactComponent, h, render) from 'preact'
 
-const Component = ashnazg(PreactComponent)
+const Component = ashnazg.extend(PreactComponent)
 
 // Simple Counter compo
 export default class Counter extends Component {
@@ -125,10 +125,19 @@ firefox http://localhost:8000/
 
 This example uses preact.
 
+# Listeners
+
+You can also add callbacks that fire when a certain part of the global state chanages, e.g:
+
+```
+ashnazg.listen('my.path', function(newState) {
+  console.log("my.path just changed to:", newState);
+});
+
 # Options
 
 ```
-ashnazg(PreactComponent, {
+ashnazg.extend(PreactComponent, {
   object: window, // where to bind .app and .state objects
   appPath: 'app', // path to .app object (default: window.app)
   statePath: 'app.state', // path to .state object (default: window.app.state)
@@ -142,7 +151,7 @@ By default ashnazg will keep global state at `window.app.state` (reachable in th
 # keep .app at foo.baz.baz
 # and .state at foo.cookie.cat
 
-ashnazg(PreactComponent, {
+ashnazg.extend(PreactComponent, {
   object: cookie,
   appPath: 'bar.baz',
   statePath: 'cookie.cat'
