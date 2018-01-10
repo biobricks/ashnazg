@@ -20,7 +20,7 @@ function renderAll() {
 }
 
 ashnazg.listen('bob.myclock', function(newState) {
-  console.log("LISTENER TRIGGERED", JSON.stringify(newState, null, 2));
+  console.log("GLOBAL LISTENER TRIGGERED", JSON.stringify(newState, null, 2));
 });
 
 window.saveState = function() {

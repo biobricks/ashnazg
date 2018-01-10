@@ -8,13 +8,12 @@ import merge from 'deepmerge'
         and "TODO not triggering" in index.js
 */
 
-
-
 // deep clone an object
 function clone(o) {
   return merge.all([o, {}], {clone: true});
 }
 
+// generate unique id
 function genID() {
   return (Math.random().toString(36)+'00000000000000000').slice(2, 16+2)
 }
@@ -162,8 +161,7 @@ function extend(ClassToExtend, opts) {
       const affected = deepestSingleAffected(path)
       if(affected) {
         if(noDiff) {
-          // TODO doesn't trigger!
-          console.log("TODO should trigger");
+          triggerListeners(affected.path, state);
           affected.component.setState(state);
         } else {
           diffUpdate(affected.path, appState, state)
@@ -198,16 +196,7 @@ function extend(ClassToExtend, opts) {
         diffPath = path + '.' + diffPath; // convert to absolute path
       }
       diffPath = diffPath.join('.');
-      listeners = findListeners(diffPath);
-      if(listeners.length) {
-        for(i=0; i < listeners.length; i++) {
-          if(triggeredListeners[listeners[i].id]) {
-            continue;
-          }
-          listeners[i].listener(getProp(state, listeners[i].path));
-          triggeredListeners[listeners[i].id] = true;
-        }
-      }
+      triggerListeners(diffPath, state, triggeredListeners);
 
       affected = deepestSingleAffected(diffPath);
 
@@ -221,6 +210,22 @@ function extend(ClassToExtend, opts) {
         affected.component.setState(getProp(state, affected.path));
       }
     });
+  }
+
+  function triggerListeners(path, state, triggered) {
+    if(!triggered) triggered = {};
+
+    var listeners = findListeners(path);
+    if(!listeners.length) return;
+
+    var i;
+    for(i=0; i < listeners.length; i++) {
+      if(triggered[listeners[i].id]) {
+        continue;
+      }
+      listeners[i].listener(getProp(state, listeners[i].path));
+      triggered[listeners[i].id] = true;
+    }
   }
 
   function findListeners(path) {
@@ -310,8 +315,6 @@ function extend(ClassToExtend, opts) {
       
       const realSetState = this.setState.bind(this);
       this.setState = function(newState) {
-        // TODO not triggering
-        console.log("SHOULD TRIGGER");
 
         if(this.hasOwnProperty('stateIndex')) {
           setProp(stateObj, this.props.state + '.' + this.stateIndex, this.state);
@@ -328,6 +331,7 @@ function extend(ClassToExtend, opts) {
 
     changeState(stateChange) {
       var newState = merge(this.state, stateChange, {clone: true});
+      triggerListeners(this.statePath, newState);
       this.setState(newState);
     }
 

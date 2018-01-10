@@ -127,12 +127,25 @@ This example uses preact.
 
 # Listeners
 
-You can also add callbacks that fire when a certain part of the global state chanages, e.g:
+You can also add callbacks that fire when a certain part of the global state changes, e.g:
 
 ```
-ashnazg.listen('my.path', function(newState) {
-  console.log("my.path just changed to:", newState);
+ashnazg.listen('absolute.path', function(newState) {
+  console.log("absolute.path just changed to:", newState);
 });
+```
+
+or you can do the same for local state inside of a component:
+
+```
+this.listen('relative.path', function(newState) {
+  console.log("relative.path just changed to:", newState);
+});
+```
+
+Per-component listeners should be added from within the component's constructor. When adding a listener to local state the path is relative to the component's state.
+
+Note that the listeners are called before the global/local state objects are changed, so listeners can access the previous state through normal methods.
 
 # Options
 
