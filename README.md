@@ -143,6 +143,14 @@ this.listen('relative.path', function(newState) {
 });
 ```
 
+or to listen to all of a component's state changes:
+
+```
+this.listen(function(newState) {
+  console.log("state just changed to:", newState);
+});
+```
+
 Per-component listeners should be added from within the component's constructor. When adding a listener to local state the path is relative to the component's state.
 
 Note that the listeners are called before the global/local state objects are changed, so listeners can access the previous state through normal methods.

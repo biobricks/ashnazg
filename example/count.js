@@ -8,12 +8,12 @@ module.exports = function(Component) {
     constructor(props) {
       super(props);
 
-      this.setState({
-        number: 1000
-      });
-
       this.listen('number', function(newState) {
         console.log("My number changed to:", newState);
+      });
+
+      this.setState({
+        number: 1000
       });
     }
     

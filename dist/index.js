@@ -4,191 +4,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-exports.default = function (windowObj, appVarPath, ClassToExtend) {
-  if (!appVarPath) {
-    ClassToExtend = windowObj;
-    windowObj = window;
-    appVarPath = 'app';
-  }
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-  if (!ClassToExtend) {
-    ClassToExtend = appVarPath;
-    appVarPath = windowObj;
-    windowObj = window;
-  }
-
-  if (!ClassToExtend) throw new Error("Missing or invalid arguments");
-
-  var app = getProp(windowObj, appVarPath);
-  if (!app) {
-    app = {};
-    setProp(windowObj, appVarPath, app);
-  }
-
-  if (app.state) throw new Error(".state already exists. ashnazg won't overwrite!");
-
-  app.state = {};
-  app._stateComponents = {};
-
-  app.setState = function (path, state, noDiff) {
-    if (!state) {
-      state = path;
-      path = undefined;
-    }
-
-    var appState = getProp(app.state, path);
-
-    commitState(path, appState, state, noDiff);
-  };
-
-  app.changeState = function (path, state, noDiff) {
-    if (!state) {
-      state = path;
-      path = undefined;
-    }
-
-    var appState = getProp(app.state, path);
-    state = (0, _deepmerge2.default)(appState, state, { clone: true });
-    console.log(JSON.stringify(state, 2));
-
-    commitState(path, appState, state, noDiff);
-  };
-
-  function commitState(path, appState, state, noDiff) {
-    if (path) {
-      var affected = deepestSingleAffected(path);
-      if (affected) {
-        if (noDiff) {
-          affected.component.setState(state);
-        } else {
-          diffUpdate(affected.path, appState, state);
-        }
-        setProp(app.state, path, state);
-        return;
-      }
-    }
-    diffUpdate(path, appState, state);
-
-    if (!path) {
-      app.state = state;
-    }
-  }
-
-  function diffUpdate(path, appState, state) {
-    if (!state) {
-      state = path;
-      path = [];
-    }
-
-    if (!path) path = '';
-
-    var affected;
-    var updated = {};
-
-    (0, _stateDiff2.default)(appState, state, function (diffPath) {
-
-      if (path) {
-        diffPath = path + '.' + diffPath; // convert to absolute path
-      }
-      diffPath = diffPath.join('.');
-
-      affected = deepestSingleAffected(diffPath);
-
-      if (affected && !updated[affected.path]) {
-        updated[affected.path] = true;
-        if (path) {
-          // convert back to relative path
-          affected.path = affected.path.slice(path.length + 1);
-        }
-
-        affected.component.setState(getProp(state, affected.path));
-      }
-    });
-  }
-
-  // Find the deepest single affected component.
-  // This component might have sub-components 
-  // but at least now we know that we don't have to diff
-  // anything shallower.
-  function deepestSingleAffected(path) {
-    var deepest;
-    var deepestLength = 0;
-    var key;
-    for (key in app._stateComponents) {
-
-      if (key.length > deepestLength && path.indexOf(key) === 0) {
-        deepest = {
-          path: key,
-          component: app._stateComponents[key]
-        };
-        deepestLength = key.length;
-      }
-    }
-    return deepest;
-  }
-
-  return function (_ClassToExtend) {
-    _inherits(Component, _ClassToExtend);
-
-    function Component(props) {
-      _classCallCheck(this, Component);
-
-      var _this = _possibleConstructorReturn(this, (Component.__proto__ || Object.getPrototypeOf(Component)).call(this, props));
-
-      if (!_this.props.state) return _possibleConstructorReturn(_this);
-
-      // using syntax: <Element state /> (no binding name specified)
-      if (typeof _this.props.state !== 'string') {
-        _this.props.state = _this.constructor.name.toLowerCase();
-      }
-
-      // using syntax: <Element state="foo[]" /> (array)
-      if (_this.props.state.indexOf("[]") === _this.props.state.length - 2) {
-        if (_this.props.state === "[]") {
-          _this.props.state = _this.constructor.name.toLowerCase();
-        } else {
-          _this.props.state = _this.props.state.slice(0, _this.props.state.length - 2).toLowerCase();
-        }
-
-        if (!getProp(app.state, _this.props.state)) {
-          setProp(app.state, _this.props.state, [_this.state]);
-          _this.stateIndex = 0;
-        } else {
-          if (!(getProp(app.state, _this.props.state) instanceof Array)) {
-            throw new Error("Invalid state property. Trying to append a component where non-array component is already mapped: app." + _this.props.state);
-          }
-
-          getProp(app.state, _this.props.state).push(_this.state);
-          _this.stateIndex = app.state[_this.props.state].length - 1;
-        }
-      } else {
-        setProp(app.state, _this.props.state, _this.state);
-      }
-
-      var componentKey = _this.props.state;
-      if (_this.hasOwnProperty('stateIndex')) {
-        componentKey += '.' + _this.stateIndex;
-      }
-
-      app._stateComponents[componentKey] = _this;
-
-      var realSetState = _this.setState.bind(_this);
-      _this.setState = function (newState) {
-
-        if (this.hasOwnProperty('stateIndex')) {
-          setProp(app.state, this.props.state + '.' + this.stateIndex, this.state);
-        } else {
-          setProp(app.state, this.props.state, this.state);
-        }
-
-        realSetState(newState);
-      };
-      return _this;
-    }
-
-    return Component;
-  }(ClassToExtend);
-};
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _stateDiff = require('state-diff');
 
@@ -205,6 +23,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+/*
+  TODO: listeners don't change on component's own changeState
+        see "TODO doesn't trigger" in index.js
+        and "TODO not triggering" in index.js
+*/
+
+// deep clone an object
+function clone(o) {
+  return _deepmerge2.default.all([o, {}], { clone: true });
+}
+
+// generate unique id
+function genID() {
+  return (Math.random().toString(36) + '00000000000000000').slice(2, 16 + 2);
+}
 
 // resolve a path like ['foo', 'bar', 'baz']
 // to return the value of obj.foo.bar.baz
@@ -259,3 +93,303 @@ function setProp(obj, path, value) {
     obj[path[0]] = value;
   }
 }
+
+function extend(ClassToExtend, opts) {
+  opts = opts || {};
+  opts.object = opts.object || window;
+  opts.appPath = opts.path || 'app';
+  opts.statePath = opts.statePath || 'app.state';
+  opts.simpleCommit = opts.simpleCommit || true;
+  opts.backwardCompatible = opts.backwardCompatible || true; // ToDo
+  opts.hasProxy = false; // ToDo does this browser support the Proxy object?
+
+  if (!ClassToExtend) throw new Error("Missing or invalid arguments");
+
+  var stateCopy; // where we keep a copy of the state if necessary
+
+  var app = getProp(opts.object, opts.appPath);
+  if (!app) {
+    app = {};
+    setProp(opts.object, opts.appPath, app);
+  }
+
+  var stateObj = getProp(opts.object, opts.statePath);
+  if (stateObj) {
+    throw new Error(".state already exists. ashnazg won't overwrite!");
+  }
+
+  stateObj = {};
+  setProp(opts.object, opts.statePath, stateObj);
+
+  autoCopy();
+
+  app._stateComponents = {};
+
+  app.setState = function (path, state, noDiff) {
+    if (!state) {
+      state = path;
+      path = undefined;
+    }
+
+    var appState = getProp(stateObj, path);
+
+    saveState(path, appState, state, noDiff);
+    autoCopy();
+  };
+
+  app.changeState = function (path, state, noDiff) {
+    if (!state) {
+      state = path;
+      path = undefined;
+    }
+
+    var appState = getProp(stateObj, path);
+    state = (0, _deepmerge2.default)(appState, state, { clone: true });
+
+    saveState(path, appState, state, noDiff);
+    autoCopy();
+  };
+
+  app.beginState = function () {
+    if (opts.hasProxy || opts.simpleCommit) return;
+
+    stateCopy = clone(stateObj);
+  };
+
+  app.commitState = function (path, noDiff) {
+    if (!opts.simpleCommit && !stateCopy) throw new Error("Called .commitState before calling .preCommitState when opts.simpleCommit is false. Go read the API");
+
+    var appState = getProp(stateCopy, path);
+    saveState(path, appState, stateObj, noDiff);
+
+    if (opts.simpleCommit) {
+      autoCopy();
+    } else {
+      stateCopy = null;
+    }
+  };
+
+  // keep a copy of the state if necessary
+  function autoCopy() {
+    if (opts.hasProxy || !opts.simpleCommit) return;
+    stateCopy = clone(stateObj);
+  }
+
+  function saveState(path, appState, state, noDiff) {
+    if (path) {
+      var affected = deepestSingleAffected(path);
+      if (affected) {
+        if (noDiff) {
+          triggerListeners(affected.path, state);
+          affected.component.setState(state);
+        } else {
+          diffUpdate(affected.path, appState, state);
+        }
+        setProp(stateObj, path, state);
+        return;
+      }
+    }
+    diffUpdate(path, appState, state);
+
+    if (!path) {
+      setProp(app, opts.statePath, state);
+    }
+  }
+
+  function diffUpdate(path, appState, state) {
+    if (!state) {
+      state = path;
+      path = [];
+    }
+
+    if (!path) path = '';
+
+    var affected, listeners;
+    var updated = {};
+    var triggeredListeners = {};
+    var i;
+    (0, _stateDiff2.default)(appState, state, function (diffPath) {
+
+      if (path) {
+        diffPath = path + '.' + diffPath; // convert to absolute path
+      }
+      diffPath = diffPath.join('.');
+      triggerListeners(diffPath, state, triggeredListeners);
+
+      affected = deepestSingleAffected(diffPath);
+
+      if (affected && !updated[affected.path]) {
+        updated[affected.path] = true;
+        if (path) {
+          // convert back to relative path
+          affected.path = affected.path.slice(path.length + 1);
+        }
+
+        affected.component.setState(getProp(state, affected.path));
+      }
+    });
+  }
+
+  function triggerListeners(path, state, triggered) {
+    if (!triggered) triggered = {};
+
+    var listeners = findListeners(path);
+    if (!listeners.length) return;
+
+    var i;
+    for (i = 0; i < listeners.length; i++) {
+      if (triggered[listeners[i].id]) {
+        continue;
+      }
+      listeners[i].listener(getProp(state, listeners[i].path));
+      triggered[listeners[i].id] = true;
+    }
+  }
+
+  function findListeners(path) {
+    var key;
+    var hits = [];
+    for (key in listeners) {
+      if (key.length > path.length) continue;
+      if (path.indexOf(key) === 0 && (key.length === path.length || path[key.length] === '.')) {
+        hits.push({
+          listener: listeners[key].callback,
+          id: listeners[key].id,
+          path: key
+        });
+      }
+    }
+    return hits;
+  }
+
+  // Find the deepest single affected component.
+  // This component might have sub-components 
+  // but at least now we know that we don't have to diff
+  // anything shallower.
+  function deepestSingleAffected(path) {
+    var deepest;
+    var deepestLength = 0;
+    var key;
+    for (key in app._stateComponents) {
+
+      if (key.length > deepestLength && path.indexOf(key) === 0) {
+        deepest = {
+          path: key,
+          component: app._stateComponents[key]
+        };
+        deepestLength = key.length;
+      }
+    }
+    return deepest;
+  }
+
+  var ExtendedClass = function (_ClassToExtend) {
+    _inherits(ExtendedClass, _ClassToExtend);
+
+    function ExtendedClass(props) {
+      _classCallCheck(this, ExtendedClass);
+
+      var _this = _possibleConstructorReturn(this, (ExtendedClass.__proto__ || Object.getPrototypeOf(ExtendedClass)).call(this, props));
+
+      if (!_this.props.state) return _possibleConstructorReturn(_this);
+
+      // using syntax: <Element state /> (no binding name specified)
+      if (typeof _this.props.state !== 'string') {
+        _this.props.state = _this.constructor.name.toLowerCase();
+      }
+
+      // using syntax: <Element state="foo[]" /> (array)
+      if (_this.props.state.indexOf("[]") === _this.props.state.length - 2) {
+        if (_this.props.state === "[]") {
+          _this.props.state = _this.constructor.name.toLowerCase();
+        } else {
+          _this.props.state = _this.props.state.slice(0, _this.props.state.length - 2).toLowerCase();
+        }
+
+        if (!getProp(stateObj, _this.props.state)) {
+          setProp(stateObj, _this.props.state, [_this.state]);
+          _this.stateIndex = 0;
+        } else {
+          if (!(getProp(stateObj, _this.props.state) instanceof Array)) {
+            throw new Error("Invalid state property. Trying to append a component where non-array component is already mapped: app." + _this.props.state);
+          }
+
+          getProp(stateObj, _this.props.state).push(_this.state);
+          _this.stateIndex = stateObj[_this.props.state].length - 1;
+        }
+      } else {
+        setProp(stateObj, _this.props.state, _this.state);
+      }
+
+      var componentKey = _this.props.state;
+      if (_this.hasOwnProperty('stateIndex')) {
+        componentKey += '.' + _this.stateIndex;
+      }
+
+      _this.statePath = componentKey;
+
+      app._stateComponents[componentKey] = _this;
+
+      var realSetState = _this.setState.bind(_this);
+      _this.setState = function (newState) {
+
+        if (this.hasOwnProperty('stateIndex')) {
+          setProp(stateObj, this.props.state + '.' + this.stateIndex, this.state);
+        } else {
+          setProp(stateObj, this.props.state, this.state);
+        }
+
+        autoCopy();
+
+        realSetState(newState);
+      };
+      autoCopy();
+      return _this;
+    }
+
+    _createClass(ExtendedClass, [{
+      key: 'setState',
+      value: function setState(newState) {
+        triggerListeners(this.statePath, newState);
+        _get(ExtendedClass.prototype.__proto__ || Object.getPrototypeOf(ExtendedClass.prototype), 'setState', this).apply(this, arguments);
+      }
+    }, {
+      key: 'changeState',
+      value: function changeState(stateChange) {
+        var newState = (0, _deepmerge2.default)(this.state, stateChange, { clone: true });
+        this.setState(newState);
+      }
+    }, {
+      key: 'listen',
+      value: function listen(path, callback) {
+        if (!this.statePath) return;
+
+        if (typeof path === 'function') {
+          callback = path;
+          path = this.statePath;
+        } else {
+          path = this.statePath + '.' + path;
+        }
+        return gListen(path, callback);
+      }
+    }]);
+
+    return ExtendedClass;
+  }(ClassToExtend);
+
+  return ExtendedClass;
+}
+
+var listeners = {};
+
+function gListen(path, callback) {
+  listeners[path] = {
+    callback: callback,
+    id: genID()
+  };
+}
+
+exports.default = {
+  extend: extend,
+  listen: gListen
+};
