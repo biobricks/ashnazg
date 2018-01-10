@@ -1,6 +1,6 @@
 {
   "name": "ashnazg-example",
-  "version": "1.0.0",
+  "version": "0.0.3",
   "scripts": {
     "build": "bin/build.js",
     "start": "bin/cmd.js"
