@@ -153,6 +153,17 @@ this.listen(function(newState) {
 
 Per-component listeners should be added from within the component's constructor. When adding a listener to local state the path is relative to the component's state.
 
+
+You can also listen for all state changes, but the API is a bit different as thecallback will receive both the changed path and the new state at that path.
+
+```
+ashnazg.listen(function(path, newState) {
+  console.log(path, "just changed to:", newState);
+});
+```
+
+The above will not trigger for local state changes to components that have not been bound to the global state.
+
 Note that the listeners are called before the global/local state objects are changed, so listeners can access the previous state through normal methods.
 
 # Options

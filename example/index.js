@@ -21,7 +21,11 @@ function renderAll() {
 }
 
 ashnazg.listen('bob.myclock', function(newState) {
-  console.log("GLOBAL LISTENER TRIGGERED", JSON.stringify(newState, null, 2));
+  console.log("Global listener for bob.myclock:", JSON.stringify(newState, null, 2));
+});
+
+ashnazg.listen(function(path, newState) {
+  console.log("Global listener for all paths:", path, JSON.stringify(newState, null, 2));
 });
 
 window.saveState = function() {
