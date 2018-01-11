@@ -209,24 +209,27 @@ function extend(ClassToExtend, opts) {
     });
   }
 
-  function diffTrigger(componentPath, oldState, newState) {
+  // allListeners is an optional parameter to pass in a different set of listeners
+  function diffTrigger(componentPath, oldState, newState, allListeners) {
 
     var triggeredListeners = {};
 
     diff(oldState, newState, function(diffPath) {    
       diffPath = diffPath.join('.');
 
-      triggerListeners(diffPath, newState, triggeredListeners, componentPath);
+      triggerListeners(diffPath, newState, triggeredListeners, componentPath, allListeners);
     });
   }
 
-  function triggerListeners(path, state, triggered, pathRelativeTo) {
+  // TODO save listeners as an object with path as keys
+  // and arrays of listeners as values
+  function triggerListeners(path, state, triggered, pathRelativeTo, allListeners) {
     if(!triggered) triggered = {};
 
     if(pathRelativeTo) {
       path = pathRelativeTo + '.' + path;
     }
-    var listeners = findListeners(path);
+    var listeners = findListeners(path, allListeners);
 
     if(!listeners.length) return;
 
@@ -253,12 +256,16 @@ function extend(ClassToExtend, opts) {
     }
   }
 
-  function findListeners(path) {
+  // allListeners is an optional parameter to pass in a different set of listeners
+  function findListeners(path, allListeners) {
     var hits = [];
     var i, l;
 
-    for(i=0; i < listeners.length; i++) {
-      l = listeners[i];
+    var listenerSet = (allListeners && allListeners.length) ? allListeners : listeners;
+    console.log("LISTENER SET:", listenerSet);
+
+    for(i=0; i < listenerSet.length; i++) {
+      l = listenerSet[i];
       if(l.path.length > path.length) continue;
       if(path.indexOf(l.path) === 0 && 
          (l.path.length === path.length ||
@@ -299,6 +306,8 @@ function extend(ClassToExtend, opts) {
 
     constructor(props) {
       super(props)
+
+      this._localListeners = [];
 
       if(!this.props.state) return;
 
@@ -361,7 +370,7 @@ function extend(ClassToExtend, opts) {
     }
 
     setState(newState) {
-      diffTrigger(this.statePath, this.state, newState);
+      diffTrigger(this.statePath, this.state, newState, this._localListeners);
       super.setState(...arguments);
     }
 
@@ -371,7 +380,23 @@ function extend(ClassToExtend, opts) {
     }
 
     listen(path, callback) {
-      if(!this.statePath) return;
+
+      // if this component is not bound to the global state
+      // add this listener to a local per-component set of listeners instead
+      if(!this.statePath) {
+        if(typeof path === 'function') {
+          callback = path;
+          path = undefined;
+        }
+
+        var id = genID();
+        this._localListeners.push({
+          id,
+          path,
+          callback
+        });
+        return id;
+      }
 
       if(typeof path === 'function') {
         callback = path;

@@ -17,6 +17,7 @@ function renderAll() {
   render(<Count state="[]" />, container);
   render(<Count state="[]" />, container);
   render(<Count state="[]" />, container);
+  render(<Count />, container);
 }
 
 ashnazg.listen('bob.myclock', function(newState) {

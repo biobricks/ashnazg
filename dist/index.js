@@ -24,12 +24,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-/*
-  TODO: listeners don't change on component's own changeState
-        see "TODO doesn't trigger" in index.js
-        and "TODO not triggering" in index.js
-*/
-
 // deep clone an object
 function clone(o) {
   return _deepmerge2.default.all([o, {}], { clone: true });
@@ -181,7 +175,7 @@ function extend(ClassToExtend, opts) {
       if (affected) {
         if (noDiff) {
           triggerListeners(affected.path, state);
-          affected.component.setState(state);
+          affected.component.setStateNoTrigger(state);
         } else {
           diffUpdate(affected.path, appState, state);
         }
@@ -210,10 +204,12 @@ function extend(ClassToExtend, opts) {
     var i;
     (0, _stateDiff2.default)(appState, state, function (diffPath) {
 
+      diffPath = diffPath.join('.');
+
       if (path) {
         diffPath = path + '.' + diffPath; // convert to absolute path
       }
-      diffPath = diffPath.join('.');
+
       triggerListeners(diffPath, state, triggeredListeners);
 
       affected = deepestSingleAffected(diffPath);
@@ -225,37 +221,68 @@ function extend(ClassToExtend, opts) {
           affected.path = affected.path.slice(path.length + 1);
         }
 
-        affected.component.setState(getProp(state, affected.path));
+        affected.component.setStateNoTrigger(getProp(state, affected.path));
       }
     });
   }
 
-  function triggerListeners(path, state, triggered) {
+  function diffTrigger(componentPath, oldState, newState) {
+
+    var triggeredListeners = {};
+
+    (0, _stateDiff2.default)(oldState, newState, function (diffPath) {
+      diffPath = diffPath.join('.');
+
+      triggerListeners(diffPath, newState, triggeredListeners, componentPath);
+    });
+  }
+
+  function triggerListeners(path, state, triggered, pathRelativeTo) {
     if (!triggered) triggered = {};
 
+    if (pathRelativeTo) {
+      path = pathRelativeTo + '.' + path;
+    }
     var listeners = findListeners(path);
+
     if (!listeners.length) return;
 
-    var i;
+    var i, listenerPath;
     for (i = 0; i < listeners.length; i++) {
-      if (triggered[listeners[i].id]) {
-        continue;
+      if (triggered[listeners[i].id]) continue;
+
+      if (pathRelativeTo) {
+        if (pathRelativeTo.length === listeners[i].path.length) {
+          listenerPath = undefined;
+        } else {
+          listenerPath = listeners[i].path.slice(pathRelativeTo.length + 1);
+        }
+      } else {
+        listenerPath = listeners[i].path;
       }
-      listeners[i].listener(getProp(state, listeners[i].path));
+
+      if (!listenerPath) {
+        listeners[i].listener(state);
+      } else {
+        listeners[i].listener(getProp(state, listenerPath));
+      }
       triggered[listeners[i].id] = true;
     }
   }
 
   function findListeners(path) {
-    var key;
     var hits = [];
-    for (key in listeners) {
-      if (key.length > path.length) continue;
-      if (path.indexOf(key) === 0 && (key.length === path.length || path[key.length] === '.')) {
+    var i, l;
+
+    for (i = 0; i < listeners.length; i++) {
+      l = listeners[i];
+      if (l.path.length > path.length) continue;
+      if (path.indexOf(l.path) === 0 && (l.path.length === path.length || path[l.path.length] === '.')) {
+
         hits.push({
-          listener: listeners[key].callback,
-          id: listeners[key].id,
-          path: key
+          listener: l.callback,
+          id: l.id,
+          path: l.path
         });
       }
     }
@@ -348,9 +375,14 @@ function extend(ClassToExtend, opts) {
     }
 
     _createClass(ExtendedClass, [{
+      key: 'setStateNoTrigger',
+      value: function setStateNoTrigger() {
+        _get(ExtendedClass.prototype.__proto__ || Object.getPrototypeOf(ExtendedClass.prototype), 'setState', this).apply(this, arguments);
+      }
+    }, {
       key: 'setState',
       value: function setState(newState) {
-        triggerListeners(this.statePath, newState);
+        diffTrigger(this.statePath, this.state, newState);
         _get(ExtendedClass.prototype.__proto__ || Object.getPrototypeOf(ExtendedClass.prototype), 'setState', this).apply(this, arguments);
       }
     }, {
@@ -380,13 +412,16 @@ function extend(ClassToExtend, opts) {
   return ExtendedClass;
 }
 
-var listeners = {};
+var listeners = [];
 
 function gListen(path, callback) {
-  listeners[path] = {
-    callback: callback,
-    id: genID()
-  };
+  var id = genID();
+  listeners.push({
+    id: id,
+    path: path,
+    callback: callback
+  });
+  return id;
 }
 
 exports.default = {
