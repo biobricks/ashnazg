@@ -1,6 +1,6 @@
 {
   "name": "ashnazg",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Simple front-end state management with JSX bindings",
   "homepage": "http://github.com/biobricks/ashnazg",
   "main": "dist/index.js",
