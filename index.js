@@ -2,6 +2,15 @@
 import diff from 'state-diff'
 import merge from 'deepmerge'
 
+function arrayMergeFunc(dst, src) {
+  return src;
+};
+
+function saneMerge(x, y, opts) {
+  opts = opts || {};
+  opts.arrayMerge = opts.arrayMerge || arrayMergeFunc;
+  return merge(x, y, opts);
+}
 
 // deep clone an object
 function clone(o) {
@@ -119,7 +128,7 @@ function extend(ClassToExtend, opts) {
     }
    
     var appState = getProp(stateObj, path);
-    state = merge(appState, state, {clone: true});
+    state = saneMerge(appState, state, {clone: true});
 
     saveState(path, appState, state, noDiff);
     autoCopy();
@@ -387,7 +396,7 @@ function extend(ClassToExtend, opts) {
     }
 
     changeState(stateChange) {
-      var newState = merge(this.state, stateChange, {clone: true});
+      var newState = saneMerge(this.state, stateChange, {clone: true});
       this.setState(newState);
     }
 

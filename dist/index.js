@@ -24,6 +24,16 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+function arrayMergeFunc(dst, src) {
+  return src;
+};
+
+function saneMerge(x, y, opts) {
+  opts = opts || {};
+  opts.arrayMerge = opts.arrayMerge || arrayMergeFunc;
+  return (0, _deepmerge2.default)(x, y, opts);
+}
+
 // deep clone an object
 function clone(o) {
   return _deepmerge2.default.all([o, {}], { clone: true });
@@ -138,7 +148,7 @@ function extend(ClassToExtend, opts) {
     }
 
     var appState = getProp(stateObj, path);
-    state = (0, _deepmerge2.default)(appState, state, { clone: true });
+    state = saneMerge(appState, state, { clone: true });
 
     saveState(path, appState, state, noDiff);
     autoCopy();
@@ -226,24 +236,29 @@ function extend(ClassToExtend, opts) {
     });
   }
 
-  function diffTrigger(componentPath, oldState, newState) {
+  // allListeners is an optional parameter to pass in a different set of listeners
+  function diffTrigger(componentPath, oldState, newState, allListeners) {
 
     var triggeredListeners = {};
 
     (0, _stateDiff2.default)(oldState, newState, function (diffPath) {
       diffPath = diffPath.join('.');
 
-      triggerListeners(diffPath, newState, triggeredListeners, componentPath);
+      triggerListeners(diffPath, newState, triggeredListeners, componentPath, allListeners);
     });
   }
 
-  function triggerListeners(path, state, triggered, pathRelativeTo) {
+  // TODO save listeners as an object with path as keys
+  // and arrays of listeners as values
+  function triggerListeners(path, state, triggered, pathRelativeTo, allListeners) {
     if (!triggered) triggered = {};
+
+    var origPath = path;
 
     if (pathRelativeTo) {
       path = pathRelativeTo + '.' + path;
     }
-    var listeners = findListeners(path);
+    var listeners = findListeners(path, allListeners);
 
     if (!listeners.length) return;
 
@@ -255,6 +270,7 @@ function extend(ClassToExtend, opts) {
         if (pathRelativeTo.length === listeners[i].path.length) {
           listenerPath = undefined;
         } else {
+
           listenerPath = listeners[i].path.slice(pathRelativeTo.length + 1);
         }
       } else {
@@ -262,25 +278,38 @@ function extend(ClassToExtend, opts) {
       }
 
       if (!listenerPath) {
-        listeners[i].listener(state);
+        listeners[i].callback(state);
       } else {
-        listeners[i].listener(getProp(state, listenerPath));
+        listeners[i].callback(getProp(state, listenerPath));
       }
+
       triggered[listeners[i].id] = true;
+    }
+
+    // don't trigger global listeners if this is a state change
+    // for a component that isn't bound to global state
+    if (allListeners && allListeners.length) return;
+
+    for (i = 0; i < globalListeners.length; i++) {
+      globalListeners[i].callback(path, getProp(state, origPath));
+      triggered[globalListeners[i].id] = true;
     }
   }
 
-  function findListeners(path) {
-    var hits = [];
+  // allListeners is an optional parameter to pass in a different set of listeners
+  function findListeners(path, allListeners) {
+    var hits = []; // copy globalListeners
     var i, l;
 
-    for (i = 0; i < listeners.length; i++) {
-      l = listeners[i];
+    var listenerSet = allListeners && allListeners.length ? allListeners : listeners;
+
+    for (i = 0; i < listenerSet.length; i++) {
+      l = listenerSet[i];
       if (l.path.length > path.length) continue;
       if (path.indexOf(l.path) === 0 && (l.path.length === path.length || path[l.path.length] === '.')) {
 
         hits.push({
-          listener: l.callback,
+          callback: l.callback,
           id: l.id,
           path: l.path
         });
@@ -317,6 +346,8 @@ function extend(ClassToExtend, opts) {
       _classCallCheck(this, ExtendedClass);
 
       var _this = _possibleConstructorReturn(this, (ExtendedClass.__proto__ || Object.getPrototypeOf(ExtendedClass)).call(this, props));
+
+      _this._localListeners = [];
 
       if (!_this.props.state) return _possibleConstructorReturn(_this);
 
@@ -382,19 +413,29 @@ function extend(ClassToExtend, opts) {
     }, {
       key: 'setState',
       value: function setState(newState) {
-        diffTrigger(this.statePath, this.state, newState);
+        diffTrigger(this.statePath, this.state, newState, this._localListeners);
         _get(ExtendedClass.prototype.__proto__ || Object.getPrototypeOf(ExtendedClass.prototype), 'setState', this).apply(this, arguments);
       }
     }, {
       key: 'changeState',
       value: function changeState(stateChange) {
-        var newState = (0, _deepmerge2.default)(this.state, stateChange, { clone: true });
+        var newState = saneMerge(this.state, stateChange, { clone: true });
         this.setState(newState);
       }
     }, {
       key: 'listen',
       value: function listen(path, callback) {
-        if (!this.statePath) return;
+
+        // if this component is not bound to the global state
+        // add this listener to a local per-component set of listeners instead
+        if (!this.statePath) {
+          if (typeof path === 'function') {
+            callback = path;
+            path = undefined;
+          }
+
+          return gListen(path, callback, true, this._localListeners);
+        }
 
         if (typeof path === 'function') {
           callback = path;
@@ -402,7 +443,7 @@ function extend(ClassToExtend, opts) {
         } else {
           path = this.statePath + '.' + path;
         }
-        return gListen(path, callback);
+        return gListen(path, callback, true);
       }
     }]);
 
@@ -413,10 +454,19 @@ function extend(ClassToExtend, opts) {
 }
 
 var listeners = [];
+var globalListeners = [];
 
-function gListen(path, callback) {
+function gListen(path, callback, isLocal, listenerList) {
+  if (!isLocal && typeof path === 'function') {
+    listenerList = globalListeners;
+    callback = path;
+    path = undefined;
+  }
+
+  if (!listenerList) listenerList = listeners;
+
   var id = genID();
-  listeners.push({
+  listenerList.push({
     id: id,
     path: path,
     callback: callback
