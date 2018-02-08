@@ -373,12 +373,6 @@ function extend(ClassToExtend, opts) {
       const realSetState = this.setState.bind(this);
       this.setState = function(newState) {
 
-        if(this.hasOwnProperty('stateIndex')) {
-          setProp(stateObj, this.props.state + '.' + this.stateIndex, this.state);
-        } else {
-          setProp(stateObj, this.props.state, this.state);
-        }
-
         autoCopy();
 
         realSetState(newState);
@@ -388,6 +382,21 @@ function extend(ClassToExtend, opts) {
 
     setStateNoTrigger() {
       super.setState(...arguments);
+    }
+
+    replaceStateNoTrigger() {
+      super.replaceState(...arguments);
+    }
+
+    replaceState(newState) {
+
+      diffTrigger(this.statePath, this.state, newState, this._localListeners);
+      super.replaceState(...arguments);
+
+      if(this.statePath) {
+        // copy local state to global state object
+        setProp(stateObj, this.props.statePath, this.state);
+      }
     }
 
     setState(newState) {

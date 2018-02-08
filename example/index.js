@@ -5,19 +5,14 @@ import ashnazg from './ashnazg'
 
 const Component = ashnazg.extend(PreactComponent)
 var Count = require('./count.js')(Component)
+var Other = require('./other.js')(Component)
 
 function renderAll() {
   var container = document.getElementById('container');
 
-  render(<Count state="bob.myclock" />, container);
   render(<Count state="yourclock" />, container);
-  render(<Count state="foo[]" />, container);
-  render(<Count state="foo[]" />, container);
-  render(<Count state="foo[]" />, container);
-  render(<Count state="[]" />, container);
-  render(<Count state="[]" />, container);
-  render(<Count state="[]" />, container);
-  render(<Count />, container);
+  render(<Other state="other" />, container);
+
 }
 
 ashnazg.listen('bob.myclock', function(newState) {
