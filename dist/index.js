@@ -391,12 +391,6 @@ function extend(ClassToExtend, opts) {
       var realSetState = _this.setState.bind(_this);
       _this.setState = function (newState) {
 
-        if (this.hasOwnProperty('stateIndex')) {
-          setProp(stateObj, this.props.state + '.' + this.stateIndex, this.state);
-        } else {
-          setProp(stateObj, this.props.state, this.state);
-        }
-
         autoCopy();
 
         realSetState(newState);
@@ -409,6 +403,23 @@ function extend(ClassToExtend, opts) {
       key: 'setStateNoTrigger',
       value: function setStateNoTrigger() {
         _get(ExtendedClass.prototype.__proto__ || Object.getPrototypeOf(ExtendedClass.prototype), 'setState', this).apply(this, arguments);
+      }
+    }, {
+      key: 'replaceStateNoTrigger',
+      value: function replaceStateNoTrigger() {
+        _get(ExtendedClass.prototype.__proto__ || Object.getPrototypeOf(ExtendedClass.prototype), 'replaceState', this).apply(this, arguments);
+      }
+    }, {
+      key: 'replaceState',
+      value: function replaceState(newState) {
+
+        diffTrigger(this.statePath, this.state, newState, this._localListeners);
+        _get(ExtendedClass.prototype.__proto__ || Object.getPrototypeOf(ExtendedClass.prototype), 'replaceState', this).apply(this, arguments);
+
+        if (this.statePath) {
+          // copy local state to global state object
+          setProp(stateObj, this.props.statePath, this.state);
+        }
       }
     }, {
       key: 'setState',
