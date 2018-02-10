@@ -349,6 +349,8 @@ function extend(ClassToExtend, opts) {
 
       _this._localListeners = [];
 
+      _this.state = _this.state || {};
+
       if (!_this.props.state) return _possibleConstructorReturn(_this);
 
       // using syntax: <Element state /> (no binding name specified)
@@ -390,7 +392,6 @@ function extend(ClassToExtend, opts) {
 
       var realSetState = _this.setState.bind(_this);
       _this.setState = function (newState) {
-
         autoCopy();
 
         realSetState(newState);
@@ -418,13 +419,19 @@ function extend(ClassToExtend, opts) {
 
         if (this.statePath) {
           // copy local state to global state object
-          setProp(stateObj, this.props.statePath, this.state);
+          setProp(stateObj, this.statePath, this.state);
         }
       }
     }, {
       key: 'setState',
       value: function setState(newState) {
         diffTrigger(this.statePath, this.state, newState, this._localListeners);
+
+        if (this.statePath) {
+          // copy local state to global state object
+          // TODO need to do a shallow merge of newState into this.state first
+          setProp(stateObj, this.statePath, newState);
+        }
         _get(ExtendedClass.prototype.__proto__ || Object.getPrototypeOf(ExtendedClass.prototype), 'setState', this).apply(this, arguments);
       }
     }, {

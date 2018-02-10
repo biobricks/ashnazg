@@ -1,40 +1,33 @@
 
 var tape = require('tape');
 
-import enzyme from 'enzyme'
-import PreactAdapter from '../enzyme-adapter-preact/index.js'
+import React from 'react'
 
-enzyme.configure({ adapter: new PreactAdapter });
+import {mount} from 'enzyme'
 
-import {h, Component as PreactComponent} from 'preact'
 import ashnazg from '../../../dist/index.js'
 
 // for docs see: https://reactjs.org/docs/test-utils.html
 //import {renderIntoDocument, findAllInRenderedTree} from 'react-dom/test-utils'
 
-const Component = ashnazg.extend(PreactComponent)
+const Component = ashnazg.extend(React.Component, {object: global})
 var Count = require('../components/count.js')(Component)
-
 
 tape('simple', function(t) {
   
   t.plan(1)
   
-
   const elements = (
-    <Count />
+    <Count state="counter" />
   )
 
-  const c = enzyme.mount(elements)
+  const c = mount(elements)
 
-/*
-  // this fails 
   c.setState({
-    count: 44
+    number: 42
   });
-*/
 
-  t.equal(1, 1, "foo");
+  t.equal(parseInt(c.find('.count').text()), 42, "foo");
   
 });
 

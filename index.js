@@ -330,6 +330,8 @@ function extend(ClassToExtend, opts) {
 
       this._localListeners = [];
 
+      this.state = this.state || {};
+      
       if(!this.props.state) return;
 
       // using syntax: <Element state /> (no binding name specified)
@@ -372,7 +374,6 @@ function extend(ClassToExtend, opts) {
       
       const realSetState = this.setState.bind(this);
       this.setState = function(newState) {
-
         autoCopy();
 
         realSetState(newState);
@@ -395,12 +396,18 @@ function extend(ClassToExtend, opts) {
 
       if(this.statePath) {
         // copy local state to global state object
-        setProp(stateObj, this.props.statePath, this.state);
+        setProp(stateObj, this.statePath, this.state);
       }
     }
 
     setState(newState) {
       diffTrigger(this.statePath, this.state, newState, this._localListeners);
+
+      if(this.statePath) {
+        // copy local state to global state object
+        // TODO need to do a shallow merge of newState into this.state first
+        setProp(stateObj, this.statePath, newState);
+      }
       super.setState(...arguments);
     }
 

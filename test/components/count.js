@@ -1,5 +1,6 @@
 
-import {h} from 'preact'
+
+import React from "react"
 import ashnazg from '../../../dist/index.js'
 
 module.exports = function(Component) {
@@ -9,10 +10,16 @@ module.exports = function(Component) {
     constructor(props) {
       super(props);
 
+
       this.listen('number', function(newState) {
-        console.log("this.state.number:", newState);
+        
       });
 
+
+
+    }
+
+    componentWillMount() {
       this.setState({
         number: 1000
       });
@@ -27,9 +34,9 @@ module.exports = function(Component) {
 	  render() {
 //      document.getElementById('app-state').value = JSON.stringify(app.state, null, 2)
       return <div>
-        <span>Count: <span class="count">{ this.state.number }</span></span>
+        <span>Count: <span className="count">{ app.state.counter.number }</span></span>
         <div>
-        <button onclick={this.increment.bind(this)}>Increment</button>
+        <button onClick={this.increment.bind(this)}>Increment</button>
         </div>
         </div>
 	  }
