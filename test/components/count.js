@@ -1,6 +1,6 @@
 
 import {h} from 'preact'
-import ashnazg from './ashnazg'
+import ashnazg from '../../../dist/index.js'
 
 module.exports = function(Component) {
 
@@ -12,13 +12,6 @@ module.exports = function(Component) {
       this.listen('number', function(newState) {
         console.log("this.state.number:", newState);
       });
-
-      ashnazg.listen('other.foo', function(newState) {
-        console.log("app.state.other.foo:", newState);
-        this.setState({
-          number: newState
-        });
-      }.bind(this));
 
       this.setState({
         number: 1000
@@ -32,9 +25,9 @@ module.exports = function(Component) {
     }
 
 	  render() {
-      document.getElementById('app-state').value = JSON.stringify(app.state, null, 2)
+//      document.getElementById('app-state').value = JSON.stringify(app.state, null, 2)
       return <div>
-        <span> Count: { this.state.number }</span>
+        <span>Count: <span class="count">{ this.state.number }</span></span>
         <div>
         <button onclick={this.increment.bind(this)}>Increment</button>
         </div>
