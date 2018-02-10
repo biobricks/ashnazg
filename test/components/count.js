@@ -10,21 +10,15 @@ module.exports = function(Component) {
     constructor(props) {
       super(props);
 
+      this.state = {
+        number: 1000
+      };
 
       this.listen('number', function(newState) {
         
       });
-
-
-
     }
-
-    componentWillMount() {
-      this.setState({
-        number: 1000
-      });
-    }
-    
+  
     increment() {
       this.setState({
         number: this.state.number + 1

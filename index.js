@@ -330,7 +330,24 @@ function extend(ClassToExtend, opts) {
 
       this._localListeners = [];
 
-      this.state = this.state || {};
+      this._state = undefined;      
+      Object.defineProperty(this, 'state', {
+        configurable: true,
+        enumerable: true,
+        set: function(newState) {
+          if(this._state === undefined && this.statePath) {
+            diffTrigger(this.statePath, this.state, newState, this._localListeners);
+            // copy local state to global state object
+            // TODO need to do a shallow merge of newState into this.state first
+            setProp(stateObj, this.statePath, newState);
+          }
+          this._state = newState;
+        },
+        get: function() {
+          return this._state;
+        }
+      });
+      
       
       if(!this.props.state) return;
 
