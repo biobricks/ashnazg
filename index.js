@@ -330,16 +330,20 @@ function extend(ClassToExtend, opts) {
 
       this._localListeners = [];
 
+
       this._state = undefined;      
       Object.defineProperty(this, 'state', {
         configurable: true,
         enumerable: true,
         set: function(newState) {
-          if(this._state === undefined && this.statePath) {
+          if(this._state === undefined) {
             diffTrigger(this.statePath, this.state, newState, this._localListeners);
-            // copy local state to global state object
-            // TODO need to do a shallow merge of newState into this.state first
-            setProp(stateObj, this.statePath, newState);
+
+            if(this.statePath) {
+              // copy local state to global state object
+              // TODO need to do a shallow merge of newState into this.state first
+              setProp(stateObj, this.statePath, newState);
+            }
           }
           this._state = newState;
         },
@@ -418,12 +422,14 @@ function extend(ClassToExtend, opts) {
     }
 
     setState(newState) {
-      diffTrigger(this.statePath, this.state, newState, this._localListeners);
-
-      if(this.statePath) {
-        // copy local state to global state object
-        // TODO need to do a shallow merge of newState into this.state first
-        setProp(stateObj, this.statePath, newState);
+      if(this._state !== undefined) {
+        diffTrigger(this.statePath, this.state, newState, this._localListeners);
+        
+        if(this.statePath) {
+          // copy local state to global state object
+          // TODO need to do a shallow merge of newState into this.state first
+          setProp(stateObj, this.statePath, newState);
+        }
       }
       super.setState(...arguments);
     }
