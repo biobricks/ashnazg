@@ -7,4 +7,4 @@ enzyme.configure({ adapter: new EnzymeAdapter });
 
 global.app = {}
 
-require('./simple.js');
+require('./local_to_global.js');

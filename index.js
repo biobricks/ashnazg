@@ -19,7 +19,7 @@ function clone(o) {
 
 // generate unique id
 function genID() {
-  return (Math.random().toString(36)+'00000000000000000').slice(2, 16+2)
+  return (Math.random().toString(36)+'00000000000000000').slice(2, 18)
 }
 
 // resolve a path like ['foo', 'bar', 'baz']
@@ -116,7 +116,9 @@ function extend(ClassToExtend, opts) {
     }
 
     var appState = getProp(stateObj, path);
-
+    // shallow merge
+    state = {...appState, state}
+    
     saveState(path, appState, state, noDiff);
     autoCopy();
   }
@@ -128,6 +130,7 @@ function extend(ClassToExtend, opts) {
     }
    
     var appState = getProp(stateObj, path);
+    // deep merge
     state = saneMerge(appState, state, {clone: true});
 
     saveState(path, appState, state, noDiff);
@@ -341,7 +344,6 @@ function extend(ClassToExtend, opts) {
 
             if(this.statePath) {
               // copy local state to global state object
-              // TODO need to do a shallow merge of newState into this.state first
               setProp(stateObj, this.statePath, newState);
             }
           }
@@ -426,9 +428,17 @@ function extend(ClassToExtend, opts) {
         diffTrigger(this.statePath, this.state, newState, this._localListeners);
         
         if(this.statePath) {
+
+          // shallow merge newState into this._state just like
+          // super.setState does, but do it before setProp call
+          this._state = {...this.state, ...newState};
+
           // copy local state to global state object
-          // TODO need to do a shallow merge of newState into this.state first
-          setProp(stateObj, this.statePath, newState);
+          // TODO is this even necessary? 
+          //      shouldn't it only need to be done the first time?
+          //      but if commented out it causes
+          //      tests/local_to_global.js to fail
+          setProp(stateObj, this.statePath, this._state);
         }
       }
       super.setState(...arguments);
