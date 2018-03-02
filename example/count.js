@@ -16,13 +16,13 @@ module.exports = function(Component) {
       ashnazg.listen('other.foo', function(newState) {
         console.log("app.state.other.foo:", newState);
         this.setState({
-          number: newState
+          number: newState + 1
         });
       }.bind(this));
 
-      this.setState({
+      this.state = {
         number: 1000
-      });
+      };
     }
     
     increment() {

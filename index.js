@@ -116,8 +116,9 @@ function extend(ClassToExtend, opts) {
     }
 
     var appState = getProp(stateObj, path);
+
     // shallow merge
-    state = {...appState, state}
+    Object.assign(clone(appState), state);
     
     saveState(path, appState, state, noDiff);
     autoCopy();
@@ -215,7 +216,6 @@ function extend(ClassToExtend, opts) {
           // convert back to relative path
           affected.path = affected.path.slice(path.length + 1);
         }
-
         affected.component.setStateNoTrigger(getProp(state, affected.path));
       }
     });
@@ -323,6 +323,7 @@ function extend(ClassToExtend, opts) {
         deepestLength = key.length
       }
     }
+
     return deepest
   }
 
@@ -341,7 +342,7 @@ function extend(ClassToExtend, opts) {
         set: function(newState) {
           if(this._state === undefined) {
             diffTrigger(this.statePath, this.state, newState, this._localListeners);
-
+            
             if(this.statePath) {
               // copy local state to global state object
               setProp(stateObj, this.statePath, newState);
@@ -353,7 +354,6 @@ function extend(ClassToExtend, opts) {
           return this._state;
         }
       });
-      
       
       if(!this.props.state) return;
 
@@ -431,7 +431,8 @@ function extend(ClassToExtend, opts) {
 
           // shallow merge newState into this._state just like
           // super.setState does, but do it before setProp call
-          this._state = {...this.state, ...newState};
+          this._state = Object.assign(clone(this.state), newState);
+//          this._state = {...this.state, ...newState};
 
           // copy local state to global state object
           // TODO is this even necessary? 

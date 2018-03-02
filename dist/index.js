@@ -4,8 +4,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
@@ -139,6 +137,9 @@ function extend(ClassToExtend, opts) {
 
     var appState = getProp(stateObj, path);
 
+    // shallow merge
+    Object.assign(clone(appState), state);
+
     saveState(path, appState, state, noDiff);
     autoCopy();
   };
@@ -150,6 +151,7 @@ function extend(ClassToExtend, opts) {
     }
 
     var appState = getProp(stateObj, path);
+    // deep merge
     state = saneMerge(appState, state, { clone: true });
 
     saveState(path, appState, state, noDiff);
@@ -232,7 +234,6 @@ function extend(ClassToExtend, opts) {
           // convert back to relative path
           affected.path = affected.path.slice(path.length + 1);
         }
-
         affected.component.setStateNoTrigger(getProp(state, affected.path));
       }
     });
@@ -338,6 +339,7 @@ function extend(ClassToExtend, opts) {
         deepestLength = key.length;
       }
     }
+
     return deepest;
   }
 
@@ -359,7 +361,6 @@ function extend(ClassToExtend, opts) {
           if (this._state === undefined) {
             diffTrigger(this.statePath, this.state, newState, this._localListeners);
 
-            console.log("AAAAAAAAAAAAA", newState);
             if (this.statePath) {
               // copy local state to global state object
               setProp(stateObj, this.statePath, newState);
@@ -453,7 +454,8 @@ function extend(ClassToExtend, opts) {
 
             // shallow merge newState into this._state just like
             // super.setState does, but do it before setProp call
-            this._state = _extends({}, this.state, newState);
+            this._state = Object.assign(clone(this.state), newState);
+            //          this._state = {...this.state, ...newState};
 
             // copy local state to global state object
             // TODO is this even necessary? 
