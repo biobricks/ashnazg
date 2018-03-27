@@ -22,7 +22,8 @@
     "url": "https://github.com/biobricks/ashnazg/issues"
   },
   "scripts": {
-    "test": "cd test/ && npm run test",
+    "test-dep": "npm --prefix test/ install",
+    "test": "npm --prefix test/ run test",
     "build": "babel -o dist/index.js index.js",
     "prepublish": "npm run build"
   },

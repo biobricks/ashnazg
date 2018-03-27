@@ -104,6 +104,7 @@ By default an instance of a component is bound to the global app state using its
 ```
 <Counter state /> // bind to app.state.myCounter
 <Counter state="myCounter" /> // bind to app.state.myCounter
+<Counter state="foo.bar.baz" /> // bind to app.state.foo.bar.baz
 <Counter state="foo[]" /> // bind to app.state.foo[0]
 <Counter state="foo[]" /> // bind to app.state.foo[1]
 <Counter state="foo[99]" /> // bind to app.state.foo[99]
@@ -219,6 +220,21 @@ then wrapping all other components with the Global component and mapping it to t
 
 Note that re-rendering all components is not as bad as it since re-rendering is still happening using vDom.
 
+# Testing
+
+First install the test dependencies:
+
+```
+npm run test-dep
+```
+
+Then to run the unit tests:
+
+```
+npm run test
+
+```
+
 # Notes on performance and compatibility
 
 On browsers without support for the `Proxy` object ashnazg will fall back to diffing the previous and new states to see what the changes were and update the relevant components _unless_ you either update the component state from within the component or use the two-argument version of `app.changeState` or `app.setState` in a way that only affects one component at a time. 
@@ -264,7 +280,7 @@ Other differences:
 # ToDo
 
 * add support for reducers
-* unit tests
+* more unit tests
 
 # License and copyright
 

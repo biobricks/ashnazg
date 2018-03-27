@@ -1,6 +1,5 @@
 {
   "scripts": {
-    "build-deps": "cd node_modules/enzyme-adapter-preact/src && babel -d ../../../dist/enzyme-adapter-preact  *.js",
     "build-preact": "npm --prefix ../ run build",
     "pre": "npm run build-preact && mkdir -p dist/components dist/tests",
     "build": "npm run pre && babel -d dist components/*.js tests/*.js",
