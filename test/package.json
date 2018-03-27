@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "build-preact": "npm --prefix ../ run build",
-    "pre": "npm run build-preact && mkdir -p dist/components dist/tests",
+    "build-ashnazg": "npm --prefix ../ run build",
+    "pre": "npm run build-ashnazg && mkdir -p dist/components dist/tests",
     "build": "npm run pre && babel -d dist components/*.js tests/*.js",
     "test": "npm run build && node dist/tests/index.js"
   },
