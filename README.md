@@ -102,7 +102,7 @@ Like the other state-modyfing functions, `app.commitState` takes an optional `pa
 By default an instance of a component is bound to the global app state using its own name (in lower case). To manually specify where a component instance is bound to the global app state you can use the `state=` property:
 
 ```
-<Counter state /> // bind to app.state.myCounter
+<Counter state /> // bind to app.state.counter
 <Counter state="myCounter" /> // bind to app.state.myCounter
 <Counter state="foo.bar.baz" /> // bind to app.state.foo.bar.baz
 <Counter state="foo[]" /> // bind to app.state.foo[0]
